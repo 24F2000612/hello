@@ -1,0 +1,54 @@
+name: CI Matrix Build with Artifacts
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: ['14', '16', '18']   # three variants
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: matrix-11b156e
+        run: |
+          echo "matrix id: matrix-11b156e"
+          echo "Running on runner: $(uname -a)"
+          echo "Node version: ${{ matrix.node-version }}"
+
+      - name: Install (no-op for demo)
+        run: |
+          # simulate a build step
+          node -v
+          npm --version || true
+
+      - name: Generate build artifact
+        run: |
+          mkdir -p build
+          ARTFILE=build/output-${{ matrix.node-version }}.txt
+          echo "Build artifact for node-${{ matrix.node-version }}" > $ARTFILE
+          echo "timestamp: $(date --utc +%Y-%m-%dT%H:%M:%SZ)" >> $ARTFILE
+          echo "node_version=${{ matrix.node-version }}" >> $ARTFILE
+          # show file size
+          ls -lh $ARTFILE
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-11b156e-node${{ matrix.node-version }}
+          path: build/output-${{ matrix.node-version }}.txt
